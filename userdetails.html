@@ -18,6 +18,9 @@
       }
     }
   </script>
+
+  <!-- Chart.js for user-specific charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body class="h-full bg-gradient-to-br from-slate-50 to-slate-100 text-slate-900 antialiased">
   <!-- Header / Welcome -->
@@ -121,9 +124,25 @@
         </p>
       </div>
     </section>
+
+    <!-- NEW: Your Usage per Session (bar chart) -->
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-elevate">
+      <div class="p-5 sm:p-6">
+        <h3 class="text-base font-bold tracking-tight">Your Usage per Session</h3>
+        <p class="text-xs text-slate-500">Hover a bar to see session <b>Start</b> and <b>End</b> times.</p>
+
+        <!-- Skeleton for chart -->
+        <div id="chartSkeleton" class="mt-4 h-72 w-full rounded-2xl bg-slate-100 animate-pulse"></div>
+
+        <!-- Chart canvas (nothing below it) -->
+        <div class="mt-4">
+          <canvas id="userBarChart" class="hidden" height="380"></canvas>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- ========= BACKEND (UNCHANGED): Your existing script block ========= -->
+  <!-- ========= BACKEND ========= -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
@@ -141,18 +160,24 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // header email
     const email = sessionStorage.getItem("userEmail");
     if (email) {
       document.getElementById("userEmail").textContent = "Logged in as: " + email;
     } else {
       document.getElementById("userEmail").textContent = "No user logged in.";
     }
-
     window.logout = function() {
       sessionStorage.removeItem("userEmail");
       window.location.href = "user-login.html";
     }
 
+    // --- Helpers ---
+    const isMs   = (t)=> t && t > 1e12;               // naive ms vs s detector
+    const toSec  = (t)=> isMs(t) ? Math.floor(t/1000) : (t||0);
+    const destroyIf = (c)=> { if (c) { try { c.destroy(); } catch(_){} } };
+
+    // --- Users cache by cardId ---
     let usersMap = {};
     onValue(ref(db, "users"), snap => {
       const data = snap.val();
@@ -172,63 +197,142 @@
       }
     });
 
-    const devicesRef = ref(db, "devices");
-    onValue(devicesRef, (snapshot) => {
-      const data = snapshot.val();
-      let allSessions = [];
+    // Pull ALL devices, then filter sessions for current user
+    let barInstance = null;
 
-      if (data) {
-        Object.keys(data).forEach(deviceId => {
-          const device = data[deviceId];
-          if (device.sessions) {
-            Object.keys(device.sessions).forEach(sessionId => {
-              const s = device.sessions[sessionId];
-              const cardId = s.cardId || "";
-              const userInfo = usersMap[cardId] || {};
-              if (userInfo.email === email) {
-                allSessions.push({
-                  email: userInfo.email || '',
-                  uid: userInfo.uid || '',
-                  username: userInfo.username || '',
-                  lineNo: userInfo.lineNo || '',
-                  cardId: cardId,
-                  reader: s.reader || '',
-                  totalTimeSec: s.totalTimeSec || '',
-                  totalUsedML: s.totalUsedML || '',
-                  totalBillTk: s.totalBillTk || '',
-                  remainingBalance: s.remainingBalance || ''
-                });
-              }
-            });
-          }
+    onValue(ref(db, "devices"), (snapshot) => {
+      const devices = snapshot.val();
+
+      // 1) Build session list for the current user's email
+      let sessionsForUser = [];
+      if (devices) {
+        Object.keys(devices).forEach(deviceId => {
+          const device = devices[deviceId];
+          if (!device || !device.sessions) return;
+
+          Object.keys(device.sessions).forEach(sessionId => {
+            const s = device.sessions[sessionId];
+            const cardId = s.cardId || "";
+            const userInfo = usersMap[cardId] || {};
+            if (userInfo.email === email) {
+              const startSec = toSec(s.timestamp);
+              const endSec   = startSec + Number(s.totalTimeSec || 0);
+
+              sessionsForUser.push({
+                start: startSec,
+                end: endSec,
+                usage: Number(s.totalUsedML || 0),
+
+                // also keep fields to fill the “Latest Water Usage” box
+                uid: userInfo.uid || '',
+                username: userInfo.username || '',
+                lineNo: userInfo.lineNo || '',
+                email: userInfo.email || '',
+                cardId: cardId,
+                reader: s.reader || '',
+                duration: Number(s.totalTimeSec || 0),
+                totalBillTk: s.totalBillTk || '',
+                remainingBalance: s.remainingBalance || ''
+              });
+            }
+          });
         });
       }
 
+      // 2) Update “Latest Water Usage” card
       const sessionCard = document.getElementById("sessionCard");
-      const skeleton = document.getElementById("skeleton");
-      const noData = document.getElementById("noData");
+      const skeleton    = document.getElementById("skeleton");
+      const noData      = document.getElementById("noData");
 
-      if (allSessions.length > 0) {
-        const lastSession = allSessions[allSessions.length - 1];
+      if (sessionsForUser.length > 0) {
+        // sort by start time asc and pick last
+        sessionsForUser.sort((a,b)=>a.start-b.start);
+        const last = sessionsForUser[sessionsForUser.length - 1];
+
         sessionCard.classList.remove("hidden");
         skeleton.classList.add("hidden");
         noData.classList.add("hidden");
 
-        document.getElementById("email").value = lastSession.email;
-        document.getElementById("uid").value = lastSession.uid;
-        document.getElementById("username").value = lastSession.username;
-        document.getElementById("lineNo").value = lastSession.lineNo;
-        document.getElementById("cardId").value = lastSession.cardId;
-        document.getElementById("reader").value = lastSession.reader;
-        document.getElementById("totalTimeSec").value = lastSession.totalTimeSec;
-        document.getElementById("totalUsedML").value = lastSession.totalUsedML;
-        document.getElementById("totalBillTk").value = lastSession.totalBillTk;
-        document.getElementById("remainingBalance").value = lastSession.remainingBalance;
+        document.getElementById("email").value            = last.email;
+        document.getElementById("uid").value              = last.uid;
+        document.getElementById("username").value         = last.username;
+        document.getElementById("lineNo").value           = last.lineNo;
+        document.getElementById("cardId").value           = last.cardId;
+        document.getElementById("reader").value           = last.reader;
+        document.getElementById("totalTimeSec").value     = last.duration;
+        document.getElementById("totalUsedML").value      = last.usage;
+        document.getElementById("totalBillTk").value      = last.totalBillTk;
+        document.getElementById("remainingBalance").value = last.remainingBalance;
       } else {
         sessionCard.classList.add("hidden");
-        skeleton.classList.add("hidden"); // hide skeleton once we know there's no data
+        skeleton.classList.add("hidden");
         noData.classList.remove("hidden");
       }
+
+      // 3) Build bar chart data for this user
+      const chartSkeleton = document.getElementById("chartSkeleton");
+      const canvas        = document.getElementById("userBarChart");
+
+      if (sessionsForUser.length === 0) {
+        destroyIf(barInstance);
+        canvas.classList.add("hidden");
+        chartSkeleton.classList.add("hidden");
+        // Nothing is shown below the chart section when there is no data.
+        return;
+      }
+
+      // Sort and data series (labels will be hidden)
+      const sorted = [...sessionsForUser].sort((a,b)=>a.start-b.start);
+      const labels = new Array(sorted.length).fill(""); // no x-axis labels at all
+      const dataMl = sorted.map(s => s.usage);
+
+      // Show chart; hide skeleton
+      chartSkeleton.classList.add("hidden");
+      canvas.classList.remove("hidden");
+
+      // (Re)render chart
+      const ctx = canvas.getContext("2d");
+      destroyIf(barInstance);
+      barInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Water Used (ml)',
+            data: dataMl,
+            backgroundColor: '#0ea5e9cc',   // Tailwind sky-500 w/ alpha
+            borderRadius: 8,
+            barPercentage: 0.85,
+            categoryPercentage: 0.72
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                // Build tooltip title from timestamps (since x labels are blank)
+                title: (items) => {
+                  const i = items[0].dataIndex;
+                  const s = new Date(sorted[i].start * 1000).toLocaleString();
+                  const e = new Date(sorted[i].end   * 1000).toLocaleTimeString();
+                  return `Start: ${s} | End: ${e}`;
+                },
+                label: (ctx) => `Usage: ${ctx.parsed.y} ml`
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: false,          // fully hide x-axis (ticks & title)
+              grid: { display: false } // no grid below chart
+            },
+            y: { beginAtZero: true }
+          }
+        }
+      });
     });
   </script>
 </body>
