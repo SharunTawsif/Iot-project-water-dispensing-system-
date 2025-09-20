@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Usage Statistics – Firebase Realtime Database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f4f6f8; --card:#fff; --ink:#111827; --muted:#6b7280; --ring:#e5e7eb;
+      --brand:#007bff; --brand-2:#ff6384; --ok:#10b981; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
+    .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+    .top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+    h1{font-size:20px;margin:0}
+    a.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:#111827;color:#fff;padding:10px 14px;border-radius:10px}
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.06)}
+    .card .hd{padding:14px 16px;border-bottom:1px solid var(--ring)}
+    .card .bd{padding:16px}
+    .hd h2{font-size:15px;margin:0}
+    .hint{font-size:12px;color:var(--muted)}
+    canvas{display:block;width:100% !important;height:420px !important}
+    #pieChart{height:440px !important}
+    #lineChartAll{height:420px !important}
+    .legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .pill{border:1px solid var(--ring);border-radius:999px;padding:4px 8px;font-size:12px;color:var(--muted)}
+    .note{margin-top:6px;font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Usage Analytics</h1>
+      <a class="btn" href="index.html" aria-label="Back to main page">← Back</a>
+    </div>
+
+    <div class="grid">
+      <!-- Prettier Doughnut -->
+      <section class="card" style="grid-column: 1/-1">
+        <div class="hd"><h2>Total Water Usage per User</h2></div>
+        <div class="bd">
+          <canvas id="pieChart"></canvas>
+          <p class="hint">Shows total water usage (ml) accumulated per user. Center label displays the grand total.</p>
+        </div>
+      </section>
+
+      <!-- Bars with explicit Start/End guidance -->
+      <section class="card">
+        <div class="hd"><h2>User A – Usage per Session</h2></div>
+        <div class="bd">
+          <canvas id="barChartA"></canvas>
+          <div class="legend-row">
+            <span class="pill">X-axis label = two lines</span>
+            <span class="pill"><b>Top</b>: Start time</span>
+            <span class="pill"><b>Bottom</b>: End time</span>
+            <span class="pill">Y-axis: Water used (ml)</span>
+          </div>
+          <p class="note">Hover a bar to see “Start … | End …” in the tooltip title.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="hd"><h2>User B – Usage per Session</h2></div>
+        <div class="bd">
+          <canvas id="barChartB"></canvas>
+          <div class="legend-row">
+            <span class="pill">X-axis label = two lines</span>
+            <span class="pill"><b>Top</b>: Start time</span>
+            <span class="pill"><b>Bottom</b>: End time</span>
+            <span class="pill">Y-axis: Water used (ml)</span>
+          </div>
+          <p class="note">No overlap: labels wrap to two lines and the canvas is taller.</p>
+        </div>
+      </section>
+
+      <section class="card" style="grid-column: 1/-1">
+        <div class="hd"><h2>All Sessions – Duration over Time</h2></div>
+        <div class="bd">
+          <canvas id="lineChartAll"></canvas>
+          <p class="hint">Session duration (seconds) by session start time.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Backend reads unchanged -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTa2HCvoXWkQRhkTxIHTlPFL7WqlWP_WQ",
+      authDomain: "trial-a8077.firebaseapp.com",
+      databaseURL: "https://trial-a8077-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "trial-a8077",
+      storageBucket: "trial-a8077.firebasestorage.app",
+      messagingSenderId: "903998363888",
+      appId: "1:903998363888:web:44a853e7652ba7b3f14a35"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Users cache by cardId
+    let usersMap = {};
+    onValue(ref(db, "users"), snap => {
+      const data = snap.val();
+      usersMap = {};
+      if (data) {
+        Object.keys(data).forEach(uid => {
+          const user = data[uid];
+          if (user.cardId) {
+            usersMap[user.cardId] = {
+              email: user.email || "",
+              lineNo: user.lineNo || "",
+              uid: uid,
+              username: user.username || ""
+            };
+          }
+        });
+      }
+    });
+
+    const deviceId = "B8:D6:1A:68:2A:28";
+    const deviceRef = ref(db, "devices/" + deviceId);
+
+    // Charts
+    let pieChart, barA, barB, lineAll;
+
+    const colors = {
+      a: "#007bff",
+      b: "#ff6384",
+      green: "#10b981",
+      amber: "#f59e0b",
+      sky: "#0ea5e9",
+      violet: "#8b5cf6",
+      ink: "#111827"
+    };
+
+    // Center text plugin for doughnut
+    const centerTextPlugin = {
+      id: 'centerText',
+      afterDraw(chart, args, opts) {
+        const {ctx, chartArea: {width, height}} = chart;
+        const total = (opts.total ?? 0).toLocaleString();
+        ctx.save();
+        ctx.font = '600 18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+        ctx.fillStyle = colors.ink;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${total} ml`, chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(0).data[0].y);
+        ctx.restore();
+      }
+    };
+
+    // Helper: two-line label (prevents overlap)
+    function timeLabel(startSec, endSec) {
+      const s = new Date(startSec * 1000).toLocaleTimeString();
+      const e = new Date(endSec   * 1000).toLocaleTimeString();
+      return `${s}\n${e}`;
+    }
+
+    const kill = (c) => { if (c) c.destroy(); };
+
+    onValue(deviceRef, snapshot => {
+      const device = snapshot.val();
+
+      let allSessions = [];
+      if (device && device.sessions) {
+        Object.keys(device.sessions).forEach(sessionId => {
+          const s = device.sessions[sessionId];
+          const cardId = s.cardId || "";
+          const userInfo = usersMap[cardId] || {};
+          const startSec = s.timestamp || 0;
+          const endSec = startSec + (s.totalTimeSec || 0);
+
+          allSessions.push({
+            username: userInfo.username || 'Unknown',
+            start: startSec,
+            end: endSec,
+            usage: Number(s.totalUsedML || 0),
+            duration: Number(s.totalTimeSec || 0)
+          });
+        });
+      }
+
+      // Aggregate usage per user
+      const usageByUser = {};
+      let grandTotal = 0;
+      allSessions.forEach(s => {
+        usageByUser[s.username] = (usageByUser[s.username] || 0) + s.usage;
+        grandTotal += s.usage;
+      });
+
+      const sA = allSessions.filter(s => s.username === 'A');
+      const sB = allSessions.filter(s => s.username === 'B');
+
+      const labelsA = sA.map(s => timeLabel(s.start, s.end));
+      const labelsB = sB.map(s => timeLabel(s.start, s.end));
+
+      // ========= DOUGHNUT: Total Usage per User (prettier) =========
+      const pieCtx = document.getElementById("pieChart").getContext("2d");
+      kill(pieChart);
+      pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(usageByUser),
+          datasets: [{
+            data: Object.values(usageByUser),
+            backgroundColor: [colors.a, colors.b, colors.green, colors.amber, colors.sky, colors.violet],
+            borderColor: '#ffffff',
+            borderWidth: 2,
+            hoverOffset: 10,
+            spacing: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '62%',
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { usePointStyle: true, pointStyle: 'circle' }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const value = ctx.parsed;
+                  const pct = grandTotal ? ((value/grandTotal)*100).toFixed(1) : 0;
+                  return `${ctx.label}: ${value} ml (${pct}%)`;
+                }
+              }
+            }
+          },
+          animation: { animateScale: true, animateRotate: true }
+        },
+        plugins: [{...centerTextPlugin, total: grandTotal}]
+      });
+
+      // ========= BAR: User A =========
+      const aCtx = document.getElementById("barChartA").getContext("2d");
+      kill(barA);
+      barA = new Chart(aCtx, {
+        type: 'bar',
+        data: {
+          labels: labelsA,
+          datasets: [{
+            label: 'Water Used (ml)',
+            data: sA.map(s => s.usage),
+            backgroundColor: colors.a + "cc",
+            borderRadius: 8,
+            barPercentage: 0.85,
+            categoryPercentage: 0.72
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  // Show explicit "Start" & "End" in title
+                  const [top, bottom] = (items[0].label || '').split('\n');
+                  return `Start: ${top} | End: ${bottom}`;
+                },
+                label: (ctx) => `Usage: ${ctx.parsed.y} ml`
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Session Time (Top: Start • Bottom: End)' },
+              ticks: {
+                autoSkip: false,
+                maxRotation: 0,
+                callback: (v) => (labelsA[v] || '').split('\n')
+              },
+              grid: { display: false }
+            },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      // ========= BAR: User B =========
+      const bCtx = document.getElementById("barChartB").getContext("2d");
+      kill(barB);
+      barB = new Chart(bCtx, {
+        type: 'bar',
+        data: {
+          labels: labelsB,
+          datasets: [{
+            label: 'Water Used (ml)',
+            data: sB.map(s => s.usage),
+            backgroundColor: colors.b + "cc",
+            borderRadius: 8,
+            barPercentage: 0.85,
+            categoryPercentage: 0.72
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  const [top, bottom] = (items[0].label || '').split('\n');
+                  return `Start: ${top} | End: ${bottom}`;
+                },
+                label: (ctx) => `Usage: ${ctx.parsed.y} ml`
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Session Time (Top: Start • Bottom: End)' },
+              ticks: {
+                autoSkip: false,
+                maxRotation: 0,
+                callback: (v) => (labelsB[v] || '').split('\n')
+              },
+              grid: { display: false }
+            },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      // ========= LINE: Duration over time =========
+      const sorted = [...allSessions].sort((a,b)=>a.start-b.start);
+      const lineLabels = sorted.map(s => new Date(s.start*1000).toLocaleTimeString());
+      const lineData = sorted.map(s => s.duration);
+
+      const lCtx = document.getElementById("lineChartAll").getContext("2d");
+      kill(lineAll);
+      lineAll = new Chart(lCtx, {
+        type: 'line',
+        data: {
+          labels: lineLabels,
+          datasets: [{
+            label: 'Duration (s)',
+            data: lineData,
+            borderColor: colors.ink,
+            borderWidth: 2,
+            pointRadius: 3,
+            tension: .3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx)=> `Duration: ${ctx.parsed.y} s` } }
+          },
+          scales: {
+            x: { grid: { display:false } },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

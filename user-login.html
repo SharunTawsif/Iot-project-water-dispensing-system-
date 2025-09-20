@@ -20,6 +20,26 @@
   </script>
 </head>
 <body class="h-full bg-white text-slate-900 antialiased">
+  <!-- Top bar with Admin Login button -->
+  <header class="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-200">
+    <div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="h-8 w-8 grid place-items-center rounded-md border border-slate-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-700" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2a7 7 0 0 1 7 7v2.268a2 2 0 0 0 .553 1.381l.894.946A2 2 0 0 1 19.894 17H4.106a2 2 0 0 1-1.553-3.405l.894-.946A2 2 0 0 0 4 11.268V9a7 7 0 0 1 7-7Zm0 20a5.002 5.002 0 0 1-4.583-3h9.166A5.002 5.002 0 0 1 12 22Z"/>
+          </svg>
+        </div>
+        <span class="text-sm font-semibold tracking-tight text-slate-800">User Portal</span>
+      </div>
+
+      <!-- The requested button -->
+      <a href="admin-login.html"
+         class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
+        Admin Login
+      </a>
+    </div>
+  </header>
+
   <main class="min-h-screen grid place-items-center p-4">
     <!-- Card -->
     <section class="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-elevate">
@@ -37,10 +57,10 @@
           <p class="mt-2 text-sm text-slate-600">Sign in to continue</p>
         </header>
 
-        <!-- (Optional) Inline status if you later switch from alert() -->
+        <!-- (Optional) Inline status -->
         <div id="status" class="mt-4 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert" aria-live="polite"></div>
 
-        <!-- Form controls (IDs preserved) -->
+        <!-- Form controls -->
         <div class="mt-6 space-y-4">
           <div class="space-y-1.5">
             <label for="email" class="block text-sm font-medium text-slate-800">Email</label>
@@ -64,7 +84,7 @@
                 autocomplete="current-password"
                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-10 text-base placeholder-slate-400 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
               />
-              <!-- Show/Hide (frontend only) -->
+              <!-- Show/Hide -->
               <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 grid place-items-center px-3 text-slate-500 hover:text-slate-700 focus:outline-none" aria-label="Show password">
                 <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
@@ -94,7 +114,7 @@
     </p>
   </main>
 
-  <!-- Small UI helpers (frontend only; backend unchanged) -->
+  <!-- Small UI helpers -->
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
     const togglePassword = document.getElementById('togglePassword');
@@ -112,7 +132,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDTa2HCvoXWkQRhkTxIHTlPFL7WqlWP_WQ",
       authDomain: "trial-a8077.firebaseapp.com",
@@ -137,11 +156,9 @@
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-          // ✅ sessionStorage-এ email রাখছি
           sessionStorage.setItem("userEmail", user.email);
-
           alert("Login successful! Welcome " + user.email);
-          window.location.href = "userdetails.html"; // Redirect
+          window.location.href = "userdetails.html";
         })
         .catch((error) => {
           alert("Login failed: " + error.message);
