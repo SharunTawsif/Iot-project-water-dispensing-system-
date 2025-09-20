@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard - User Info Input</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          boxShadow: {
+            elevate: '0 1px 2px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.06)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="h-full bg-white text-slate-900 antialiased">
+  <main class="min-h-screen p-4 sm:p-6">
+    <div class="mx-auto max-w-3xl">
+      <!-- Header + Manage users -->
+      <div class="mb-4 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <h1 class="text-2xl font-extrabold tracking-tight">Admin Dashboard</h1>
+        <button id="manageUsersBtn"
+          class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">
+          Manage All Users
+        </button>
+      </div>
+
+      <!-- Card -->
+      <section class="rounded-2xl border border-slate-200 bg-white shadow-elevate">
+        <div class="p-6 sm:p-8">
+          <!-- Select user -->
+          <div class="mb-6">
+            <label for="userSelect" class="mb-2 block text-sm font-medium text-slate-800">Select User</label>
+            <select id="userSelect"
+              class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40">
+              <option value="">-- Select a User --</option>
+            </select>
+          </div>
+
+          <!-- User info -->
+          <div id="userInfo" style="display:none;">
+            <h2 class="mb-3 text-lg font-bold tracking-tight">User Info</h2>
+
+            <div class="mb-6 grid gap-4 sm:grid-cols-2">
+              <div class="sm:col-span-1">
+                <label class="mb-1.5 block text-sm font-medium text-slate-800">UserID</label>
+                <input type="text" id="userId" readonly
+                  class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base text-slate-700 shadow-sm" />
+              </div>
+
+              <div class="sm:col-span-1">
+                <label class="mb-1.5 block text-sm font-medium text-slate-800">Email</label>
+                <div class="min-h-[44px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base text-slate-700 shadow-sm">
+                  <span id="email"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Water usage details -->
+            <h2 class="mb-3 text-lg font-bold tracking-tight">Water Usage Details</h2>
+
+            <form id="usageForm" class="grid gap-4 sm:grid-cols-2">
+              <!-- Line no -->
+              <div class="sm:col-span-1">
+                <label for="lineNo" class="mb-1.5 block text-sm font-medium text-slate-800">Line no</label>
+                <input type="number" id="lineNo" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- User Name -->
+              <div class="sm:col-span-1">
+                <label for="name" class="mb-1.5 block text-sm font-medium text-slate-800">User Name</label>
+                <input type="text" id="name" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- Card ID (readonly) -->
+              <div class="sm:col-span-1">
+                <label for="cardId" class="mb-1.5 block text-sm font-medium text-slate-800">Card ID</label>
+                <input type="text" id="cardId" readonly
+                  class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-base text-slate-700 shadow-sm" />
+              </div>
+
+              <!-- Usage (Litre) -->
+              <div class="sm:col-span-1">
+                <label for="usageLitres" class="mb-1.5 block text-sm font-medium text-slate-800">Usage (Litre)</label>
+                <input type="number" step="0.01" id="usageLitres" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- Bill (tk) -->
+              <div class="sm:col-span-1">
+                <label for="bill" class="mb-1.5 block text-sm font-medium text-slate-800">Bill (tk)</label>
+                <input type="number" step="0.01" id="bill" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- Time -->
+              <div class="sm:col-span-1">
+                <label for="time" class="mb-1.5 block text-sm font-medium text-slate-800">Time</label>
+                <input type="time" id="time" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- Balance -->
+              <div class="sm:col-span-1">
+                <label for="balance" class="mb-1.5 block text-sm font-medium text-slate-800">Balance</label>
+                <input type="number" step="0.01" id="balance" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- Remaining Usage (Litre) -->
+              <div class="sm:col-span-1">
+                <label for="remainingUsage" class="mb-1.5 block text-sm font-medium text-slate-800">Remaining Usage (Litre)</label>
+                <input type="number" step="0.01" id="remainingUsage" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- Status -->
+              <div class="sm:col-span-1">
+                <label for="status" class="mb-1.5 block text-sm font-medium text-slate-800">Status</label>
+                <input type="text" id="status" required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40" />
+              </div>
+
+              <!-- Submit -->
+              <div class="sm:col-span-2 mt-2">
+                <button type="submit"
+                  class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900">
+                  Save Usage Info
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Keep this helper and ID the same -->
+  <script>
+    document.getElementById('manageUsersBtn').addEventListener('click', () => {
+      window.location.href = 'all-users.html';
+    });
+  </script>
+
+  <!-- ==== BACKEND (UNCHANGED) ==== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+      authDomain: "iotproject-1a161.firebaseapp.com",
+      projectId: "iotproject-1a161",
+      storageBucket: "iotproject-1a161.appspot.com",
+      messagingSenderId: "231906985874",
+      appId: "1:231906985874:web:0450fc017515f82c99a34b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const userSelect = document.getElementById('userSelect');
+    const userInfoDiv = document.getElementById('userInfo');
+    const uidInput = document.getElementById('userId');
+    const emailSpan = document.getElementById('email');
+    const usageForm = document.getElementById('usageForm');
+    const lineNoInput = document.getElementById('lineNo');
+    const cardIdInput = document.getElementById('cardId');
+    const usernameInput = document.getElementById('name');
+
+    const lineNoToCardId = {
+      1: "99035899",
+      2: "98096921"
+    };
+
+    const lineNoToUserName = {
+      1: "A",
+      2: "B"
+    };
+
+    async function loadUsers() {
+      const usersCol = collection(db, "users");
+      const usersSnapshot = await getDocs(usersCol);
+      usersSnapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.role !== 1) {
+          const option = document.createElement('option');
+          option.value = docSnap.id;
+          option.textContent = data.email ? data.email : "No Email";
+          userSelect.appendChild(option);
+        }
+      });
+    }
+    loadUsers();
+
+    userSelect.addEventListener('change', async () => {
+      const selectedUid = userSelect.value;
+      if (!selectedUid) {
+        userInfoDiv.style.display = "none";
+        return;
+      }
+      const userDocRef = doc(db, "users", selectedUid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        uidInput.value = selectedUid;
+        emailSpan.textContent = userData.email || "";
+
+        const usageDocRef = doc(db, "users", selectedUid, "waterUsage", "latest");
+        const usageDocSnap = await getDoc(usageDocRef);
+        if (usageDocSnap.exists()) {
+          const usageData = usageDocSnap.data();
+          lineNoInput.value = usageData.lineNo || "";
+          cardIdInput.value = usageData.cardId || "";
+          usernameInput.value = usageData.name || userData.name || "";
+          document.getElementById('usageLitres').value = usageData.usageLitres || "";
+          document.getElementById('bill').value = usageData.bill || "";
+          document.getElementById('time').value = usageData.time || "";
+          document.getElementById('balance').value = usageData.balance || "";
+          document.getElementById('remainingUsage').value = usageData.remainingUsage || "";
+          document.getElementById('status').value = usageData.status || "";
+        } else {
+          lineNoInput.value = "";
+          cardIdInput.value = "";
+          usernameInput.value = userData.name || "";
+          document.getElementById('usageLitres').value = "";
+          document.getElementById('bill').value = "";
+          document.getElementById('time').value = "";
+          document.getElementById('balance').value = "";
+          document.getElementById('remainingUsage').value = "";
+          document.getElementById('status').value = "";
+        }
+
+        userInfoDiv.style.display = "block";
+      }
+    });
+
+    lineNoInput.addEventListener('input', (e) => {
+      const lineNo = e.target.value;
+      cardIdInput.value = lineNoToCardId[lineNo] || "";
+      usernameInput.value = lineNoToUserName[lineNo] || "";
+    });
+
+    usageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const selectedUid = userSelect.value;
+      if (!selectedUid) {
+        alert("Please select a user.");
+        return;
+      }
+
+      const usageData = {
+        cardId: cardIdInput.value,
+        name: usernameInput.value,
+        lineNo: Number(lineNoInput.value),
+        usageLitres: Number(document.getElementById('usageLitres').value),
+        bill: Number(document.getElementById('bill').value),
+        time: document.getElementById('time').value,
+        balance: Number(document.getElementById('balance').value),
+        remainingUsage: Number(document.getElementById('remainingUsage').value),
+        status: document.getElementById('status').value
+      };
+
+      try {
+        await setDoc(doc(db, "users", selectedUid, "waterUsage", "latest"), usageData);
+        await setDoc(doc(db, "users", selectedUid), { name: usernameInput.value }, { merge: true });
+        alert("Usage info and user name saved successfully!");
+      } catch (error) {
+        alert("Error saving usage info: " + error.message);
+      }
+    });
+
+  </script>
+</body>
+</html>

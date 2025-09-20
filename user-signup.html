@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Signup</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          boxShadow: {
+            elevate: '0 1px 2px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.06)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="h-full bg-white text-slate-900 antialiased">
+  <main class="min-h-screen grid place-items-center p-4">
+    <!-- Card -->
+    <section class="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-elevate">
+      <div class="p-6 sm:p-8">
+        <!-- Logo / Mark -->
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-slate-100 bg-white">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-slate-800" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2a7 7 0 0 1 7 7v2.268a2 2 0 0 0 .553 1.381l.894.946A2 2 0 0 1 19.894 17H4.106a2 2 0 0 1-1.553-3.405l.894-.946A2 2 0 0 0 4 11.268V9a7 7 0 0 1 7-7Zm0 20a5.002 5.002 0 0 1-4.583-3h9.166A5.002 5.002 0 0 1 12 22Z"/>
+          </svg>
+        </div>
+
+        <!-- Heading -->
+        <header class="text-center">
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">User Signup</h1>
+          <p class="mt-2 text-sm text-slate-600">Create your account to continue</p>
+        </header>
+
+        <!-- (Optional) Inline status if you later switch from alert() -->
+        <div id="status" class="mt-4 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert" aria-live="polite"></div>
+
+        <!-- Form controls (IDs preserved) -->
+        <div class="mt-6 space-y-4">
+          <div class="space-y-1.5">
+            <label for="email" class="block text-sm font-medium text-slate-800">Email</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter Your Email"
+              autocomplete="email"
+              inputmode="email"
+              class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-base placeholder-slate-400 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="password" class="block text-sm font-medium text-slate-800">Password</label>
+            <div class="relative">
+              <input
+                type="password"
+                id="password"
+                placeholder="••••••••"
+                autocomplete="new-password"
+                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 pr-10 text-base placeholder-slate-400 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+              />
+              <!-- Show/Hide (frontend only) -->
+              <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 grid place-items-center px-3 text-slate-500 hover:text-slate-700 focus:outline-none" aria-label="Show password">
+                <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button
+            id="signupBtn"
+            type="button"
+            class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900"
+          >
+            Signup
+          </button>
+        </div>
+
+        <p class="mt-4 text-center text-sm text-slate-600">
+          Already have an account?
+          <a href="user-login.html" class="font-medium text-sky-600 hover:underline">Sign in</a>
+        </p>
+      </div>
+    </section>
+
+    <p class="mt-4 text-center text-[11px] text-slate-500">
+      © <span id="year"></span> Your Company. All rights reserved.
+    </p>
+  </main>
+
+  <!-- Small UI helpers (frontend only; backend unchanged) -->
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const togglePassword = document.getElementById('togglePassword');
+    const pwd = document.getElementById('password');
+    togglePassword?.addEventListener('click', () => {
+      const hidden = pwd.type === 'password';
+      pwd.type = hidden ? 'text' : 'password';
+      togglePassword.setAttribute('aria-label', hidden ? 'Hide password' : 'Show password');
+      pwd.focus();
+    });
+  </script>
+
+  <!-- ==== BACKEND (UNCHANGED) ==== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTa2HCvoXWkQRhkTxIHTlPFL7WqlWP_WQ",
+      authDomain: "trial-a8077.firebaseapp.com",
+      databaseURL: "https://trial-a8077-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "trial-a8077",
+      storageBucket: "trial-a8077.appspot.com",
+      messagingSenderId: "903998363888"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const lineNoToCardId = { 1: "99035899", 2: "98096921" };
+    const lineNoToUsername = { 1: "A", 2: "B" };
+
+    document.getElementById("signupBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        alert("Please enter email and password");
+        return;
+      }
+
+      try {
+        // 🔹 Check if email already exists in RTDB
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, "users"));
+        const usersData = snapshot.exists() ? snapshot.val() : {};
+
+        for (let uid in usersData) {
+          if (usersData[uid].email === email) {
+            alert("This email is already signed up! Please login.");
+            window.location.href = "user-login.html";
+            return;
+          }
+        }
+
+        // 🔹 Determine lineNo, username, cardId
+        const userCount = Object.keys(usersData).length;
+        if (userCount >= 2) {
+          alert("Only 2 users allowed (A & B).");
+          return;
+        }
+
+        const lineNo = userCount + 1;
+        const username = lineNoToUsername[lineNo];
+        const cardId = lineNoToCardId[lineNo];
+
+        // 🔹 Firebase Auth signup
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 🔹 Save to Realtime Database
+        await set(ref(db, "users/" + user.uid), {
+          uid: user.uid,
+          email: email,
+          role: 0,
+          username: username,
+          lineNo: lineNo,
+          cardId: cardId
+        });
+
+        alert("Signup successful! Redirecting...");
+        window.location.replace("userdetails.html");
+
+      } catch (error) {
+        if (error.code === "auth/email-already-in-use") {
+          alert("This email is already registered. Please login.");
+          window.location.href = "user-login.html";
+        } else {
+          alert("Error: " + error.message);
+        }
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>

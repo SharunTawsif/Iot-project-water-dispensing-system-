@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Water Usage</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f6f8; }
+    h2 { margin-top: 30px; color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 30px; background: white; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+    th { background: #007bff; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .container { max-width: 1400px; margin: auto; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Water Usage (Selected Sessions)</h1>
+
+  <h2>Water Usage</h2>
+  <table id="selectedSessionsTable">
+    <thead>
+      <tr>
+        <th>Email</th><th>UID</th><th>Username</th><th>Line No</th>
+        <th>Card ID</th><th>Reader</th><th>Total Time (s)</th><th>Water Used (ml)</th>
+        <th>Total Bill (Tk)</th><th>Remaining Balance</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTa2HCvoXWkQRhkTxIHTlPFL7WqlWP_WQ",
+    authDomain: "trial-a8077.firebaseapp.com",
+    databaseURL: "https://trial-a8077-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "trial-a8077",
+    storageBucket: "trial-a8077.firebasestorage.app",
+    messagingSenderId: "903998363888",
+    appId: "1:903998363888:web:44a853e7652ba7b3f14a35"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let usersMap = {};
+  onValue(ref(db, "users"), snap => {
+    const data = snap.val();
+    usersMap = {};
+    if (data) {
+      Object.keys(data).forEach(uid => {
+        const user = data[uid];
+        if (user.cardId) {
+          usersMap[user.cardId] = {
+            email: user.email || "",
+            lineNo: user.lineNo || "",
+            uid: uid,
+            username: user.username || ""
+          };
+        }
+      });
+    }
+  });
+
+  const devicesRef = ref(db, "devices");
+  onValue(devicesRef, (snapshot) => {
+    const data = snapshot.val();
+    const selectedBody = document.querySelector("#selectedSessionsTable tbody");
+    selectedBody.innerHTML = "";
+
+    let allSessions = [];
+
+    if (data) {
+      Object.keys(data).forEach(deviceId => {
+        const device = data[deviceId];
+        if (device.sessions) {
+          Object.keys(device.sessions).forEach(sessionId => {
+            const s = device.sessions[sessionId];
+            const cardId = s.cardId || "";
+            const userInfo = usersMap[cardId] || {};
+            const lineNo = userInfo.lineNo || "";
+
+            allSessions.push({
+              email: userInfo.email || '',
+              uid: userInfo.uid || '',
+              username: userInfo.username || '',
+              lineNo: lineNo,
+              cardId: cardId,
+              reader: s.reader || '',
+              totalTimeSec: s.totalTimeSec || '',
+              totalUsedML: s.totalUsedML || '',
+              totalBillTk: s.totalBillTk || '',
+              remainingBalance: s.remainingBalance || ''
+            });
+          });
+        }
+      });
+    }
+
+    let lastLine1 = null;
+    let lastLine2 = null;
+
+    for (let i = allSessions.length - 1; i >= 0; i--) {
+      if (!lastLine2 && allSessions[i].lineNo == "2") lastLine2 = allSessions[i];
+      if (!lastLine1 && allSessions[i].lineNo == "1") lastLine1 = allSessions[i];
+      if (lastLine1 && lastLine2) break;
+    }
+
+    if (lastLine2) {
+      selectedBody.innerHTML += `
+        <tr>
+          <td>${lastLine2.email}</td>
+          <td>${lastLine2.uid}</td>
+          <td>${lastLine2.username}</td>
+          <td>${lastLine2.lineNo}</td>
+          <td>${lastLine2.cardId}</td>
+          <td>${lastLine2.reader}</td>
+          <td>${lastLine2.totalTimeSec}</td>
+          <td>${lastLine2.totalUsedML}</td>
+          <td>${lastLine2.totalBillTk}</td>
+          <td>${lastLine2.remainingBalance}</td>
+        </tr>`;
+    }
+
+    if (lastLine1) {
+      selectedBody.innerHTML += `
+        <tr>
+          <td>${lastLine1.email}</td>
+          <td>${lastLine1.uid}</td>
+          <td>${lastLine1.username}</td>
+          <td>${lastLine1.lineNo}</td>
+          <td>${lastLine1.cardId}</td>
+          <td>${lastLine1.reader}</td>
+          <td>${lastLine1.totalTimeSec}</td>
+          <td>${lastLine1.totalUsedML}</td>
+          <td>${lastLine1.totalBillTk}</td>
+          <td>${lastLine1.remainingBalance}</td>
+        </tr>`;
+    }
+  });
+</script>
+</body>
+</html>

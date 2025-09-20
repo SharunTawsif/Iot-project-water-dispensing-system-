@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose Role</title>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome</h1>
+    <p>Select your role:</p>
+    <div class="btn-group">
+      <a href="user-login.html" class="btn">User</a>
+      <a href="admin-login.html" class="btn">Admin</a>
+    </div>
+  </div>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Signup</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #f2f2f2; }
+    .form-box { background: white; padding: 20px; width: 300px; margin: auto; margin-top: 100px; border-radius: 8px; box-shadow: 0px 0px 10px gray; }
+    input { width: 90%; padding: 10px; margin: 5px; }
+    button { padding: 10px; width: 95%; background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+
+<div class="form-box">
+  <h2>User Signup</h2>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button id="signupBtn">Signup</button>
+  <p><a href="user-login.html">Already have an account?</a></p>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+    authDomain: "iotproject-1a161.firebaseapp.com",
+    projectId: "iotproject-1a161",
+    storageBucket: "iotproject-1a161.appspot.com",
+    messagingSenderId: "231906985874",
+    appId: "1:231906985874:web:0450fc017515f82c99a34b",
+    measurementId: "G-RQ937CM360"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  document.getElementById("signupBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Firestore এ role সহ ইউজারের ডাটা রাখুন
+      await setDoc(doc(db, "users", user.uid), {
+        email: email,
+        role: 0  // user role 0 সেট করলাম
+      });
+
+      alert("Signup successful!");
+      console.log(user);
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+</script>
+
+
+</body>
+</html>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Login</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #f2f2f2; }
+    .form-box { background: white; padding: 20px; width: 300px; margin: auto; margin-top: 100px; border-radius: 8px; box-shadow: 0px 0px 10px gray; }
+    input { width: 90%; padding: 10px; margin: 5px; }
+    button { padding: 10px; width: 95%; background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+
+<div class="form-box">
+  <h2>User Login</h2>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button id="loginBtn" type="button">Login</button>
+  <p><a href="user-signup.html">Don't have an account? Signup here</a></p>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+    authDomain: "iotproject-1a161.firebaseapp.com",
+    projectId: "iotproject-1a161",
+    storageBucket: "iotproject-1a161.appspot.com",
+    messagingSenderId: "231906985874",
+    appId: "1:231906985874:web:0450fc017515f82c99a34b",
+    measurementId: "G-RQ937CM360"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  document.getElementById("loginBtn").addEventListener("click", () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+      alert("Please enter both email and password");
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        alert("Login successful! Welcome " + userCredential.user.email);
+        window.location.href = "userdetails.html";
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  });
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Signup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 320px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      width: 95%;
+      padding: 12px;
+      background-color: #007bff;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
+      display: block;
+      margin-top: 15px;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Admin Signup</h1>
+    <form id="adminSignupForm">
+      <input type="text" id="name" placeholder="Admin Name" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Sign Up</button>
+    </form>
+    <a href="admin-login.html">Already have an account?</a>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+      authDomain: "iotproject-1a161.firebaseapp.com",
+      projectId: "iotproject-1a161",
+      storageBucket: "iotproject-1a161.appspot.com",
+      messagingSenderId: "231906985874",
+      appId: "1:231906985874:web:0450fc017515f82c99a34b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const form = document.getElementById('adminSignupForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Save admin info in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          name: name,
+          email: email,
+          role: 1
+        });
+
+        alert("Admin registered successfully!");
+        window.location.href = "admin-login.html"; // redirect after signup
+
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    });
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 320px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    button {
+      width: 95%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    p {
+      margin-top: 15px;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Admin Login</h1>
+    <form id="adminLoginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+    <p><a href="admin-signup.html">Don't have an account?</a></p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Your Firebase config here (replace with your own)
+    const firebaseConfig = {
+      apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+      authDomain: "iotproject-1a161.firebaseapp.com",
+      projectId: "iotproject-1a161",
+      storageBucket: "iotproject-1a161.appspot.com",
+      messagingSenderId: "231906985874",
+      appId: "1:231906985874:web:0450fc017515f82c99a34b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("adminLoginForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+
+        // Check role in Firestore
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (!userDoc.exists()) {
+          alert("User data not found in Firestore.");
+          return;
+        }
+
+        const userData = userDoc.data();
+        if (userData.role === 1) { 
+          alert("Admin login successful!");
+          window.location.href = "admin-dashboard.html"; // redirect
+        } else {
+          alert("Access denied. You are not registered as an admin.");
+          await auth.signOut();
+        }
+
+      } catch (error) {
+        alert("Login failed: " + error.message);
+      }
+    });
+  </script>
+
+</body>
+</html>
+style.css:
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.container {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+h1 {
+  margin-bottom: 20px;
+}
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+.btn {
+  background: #4CAF50;
+  color: white;
+  padding: 10px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.btn:hover {
+  background: #45a049;
+}
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+// firebase-auth.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+  authDomain: "iotproject-1a161.firebaseapp.com",
+  projectId: "iotproject-1a161",
+  storageBucket: "iotproject-1a161.appspot.com",
+  messagingSenderId: "231906985874",
+  appId: "1:231906985874:web:0450fc017515f82c99a34b"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Handle Admin Signup form submission
+const adminSignupForm = document.getElementById("adminSignupForm");
+
+if (adminSignupForm) {
+  adminSignupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Get values from form inputs
+    const name = adminSignupForm.querySelector('input[type="text"]').value;
+    const email = adminSignupForm.querySelector('input[type="email"]').value;
+    const password = adminSignupForm.querySelector('input[type="password"]').value;
+
+    try {
+      // Create user with email and password
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save additional admin info in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name: name,
+        email: email,
+        role: "admin"
+      });
+
+      alert("Admin registered successfully!");
+      // Redirect to admin login or dashboard page
+      window.location.href = "admin-login.html";
+
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  });
+}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard - User Info Input</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f7f7f7; }
+    select, input, button { padding: 10px; margin: 5px 0; width: 300px; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    .container { background: white; padding: 20px; max-width: 400px; margin: auto; border-radius: 8px; box-shadow: 0 0 8px #ccc;}
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Select User</h2>
+    <select id="userSelect">
+      <option value="">-- Select a User --</option>
+    </select>
+
+    <div id="userInfo" style="display:none;">
+      <h3>User Info</h3>
+      <p><strong>UserID:</strong> <input type="text" id="userId" readonly></p>
+      <p><strong>Email:</strong> <span id="email"></span></p>
+
+      <h3>Water Usage Details</h3>
+      <form id="usageForm">
+        <label>Line no</label>
+        <input type="number" id="lineNo" required>
+
+        <label>User Name</label>
+        <input type="text" id="name" required>
+
+        <label>Card ID</label>
+        <input type="text" id="cardId" readonly>
+
+        <label>Usage (Litre)</label>
+        <input type="number" step="0.01" id="usageLitres" required>
+
+        <label>Bill (tk)</label>
+        <input type="number" step="0.01" id="bill" required>
+
+        <label>Time</label>
+        <input type="time" id="time" required>
+
+        <label>Balance</label>
+        <input type="number" step="0.01" id="balance" required>
+
+        <label>Remaining Usage (Litre)</label>
+        <input type="number" step="0.01" id="remainingUsage" required>
+
+        <label>Status</label>
+        <input type="text" id="status" required>
+
+        <button type="submit">Save Usage Info</button>
+      </form>
+    </div>
+  </div>
+
+  <button id="manageUsersBtn">Manage All Users</button>
+
+  <script>
+    document.getElementById('manageUsersBtn').addEventListener('click', () => {
+      window.location.href = 'all-users.html';  // এখানে আপনার পেজের নাম দিন
+    });
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+      authDomain: "iotproject-1a161.firebaseapp.com",
+      projectId: "iotproject-1a161",
+      storageBucket: "iotproject-1a161.appspot.com",
+      messagingSenderId: "231906985874",
+      appId: "1:231906985874:web:0450fc017515f82c99a34b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const userSelect = document.getElementById('userSelect');
+    const userInfoDiv = document.getElementById('userInfo');
+    const uidInput = document.getElementById('userId');
+    const emailSpan = document.getElementById('email');
+    const usageForm = document.getElementById('usageForm');
+    const lineNoInput = document.getElementById('lineNo');
+    const cardIdInput = document.getElementById('cardId');
+    const usernameInput = document.getElementById('name');
+
+    // line no অনুযায়ী card id এবং username ম্যাপিং
+    const lineNoToCardId = {
+      1: "99035899",
+      2: "98096921"
+    };
+
+    const lineNoToUserName = {
+      1: "A",
+      2: "B"
+    };
+
+    // ইউজার লোড (role=0)
+    async function loadUsers() {
+      const usersCol = collection(db, "users");
+      const usersSnapshot = await getDocs(usersCol);
+      usersSnapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.role !== 1) {  // user role = 0 or not admin
+          const option = document.createElement('option');
+          option.value = docSnap.id;
+          option.textContent = data.email ? data.email : "No Email";
+          userSelect.appendChild(option);
+        }
+      });
+    }
+    loadUsers();
+
+    // ইউজার সিলেক্ট করলে ডাটা দেখানো
+    userSelect.addEventListener('change', async () => {
+      const selectedUid = userSelect.value;
+      if (!selectedUid) {
+        userInfoDiv.style.display = "none";
+        return;
+      }
+      const userDocRef = doc(db, "users", selectedUid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        uidInput.value = selectedUid;
+        emailSpan.textContent = userData.email || "";
+
+        // ওয়াটার ইউসেজ ডাটা লোড করুন
+        const usageDocRef = doc(db, "users", selectedUid, "waterUsage", "latest");
+        const usageDocSnap = await getDoc(usageDocRef);
+        if (usageDocSnap.exists()) {
+          const usageData = usageDocSnap.data();
+          lineNoInput.value = usageData.lineNo || "";
+          cardIdInput.value = usageData.cardId || "";
+          usernameInput.value = usageData.name || userData.name || "";
+          document.getElementById('usageLitres').value = usageData.usageLitres || "";
+          document.getElementById('bill').value = usageData.bill || "";
+          document.getElementById('time').value = usageData.time || "";
+          document.getElementById('balance').value = usageData.balance || "";
+          document.getElementById('remainingUsage').value = usageData.remainingUsage || "";
+          document.getElementById('status').value = usageData.status || "";
+        } else {
+          // যদি usage data না থাকে তাহলে ফিল্ডগুলো খালি রাখুন
+          lineNoInput.value = "";
+          cardIdInput.value = "";
+          usernameInput.value = userData.name || "";
+          document.getElementById('usageLitres').value = "";
+          document.getElementById('bill').value = "";
+          document.getElementById('time').value = "";
+          document.getElementById('balance').value = "";
+          document.getElementById('remainingUsage').value = "";
+          document.getElementById('status').value = "";
+        }
+
+        userInfoDiv.style.display = "block";
+      }
+    });
+
+    // lineNo input এ cardId এবং username auto-fill
+    lineNoInput.addEventListener('input', (e) => {
+      const lineNo = e.target.value;
+      cardIdInput.value = lineNoToCardId[lineNo] || "";
+      usernameInput.value = lineNoToUserName[lineNo] || "";
+    });
+
+    // Form সাবমিট
+    usageForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const selectedUid = userSelect.value;
+      if (!selectedUid) {
+        alert("Please select a user.");
+        return;
+      }
+
+      const usageData = {
+        cardId: cardIdInput.value,
+        name: usernameInput.value,
+        lineNo: Number(lineNoInput.value),
+        usageLitres: Number(document.getElementById('usageLitres').value),
+        bill: Number(document.getElementById('bill').value),
+        time: document.getElementById('time').value,
+        balance: Number(document.getElementById('balance').value),
+        remainingUsage: Number(document.getElementById('remainingUsage').value),
+        status: document.getElementById('status').value
+      };
+
+      try {
+        // waterUsage/latest ডকুমেন্ট আপডেট
+        await setDoc(doc(db, "users", selectedUid, "waterUsage", "latest"), usageData);
+
+        // মূল users ডকুমেন্টে নাম আপডেট (merge:true দিয়ে শুধু name ফিল্ড আপডেট হবে)
+        await setDoc(doc(db, "users", selectedUid), { name: usernameInput.value }, { merge: true });
+
+        alert("Usage info and user name saved successfully!");
+      } catch (error) {
+        alert("Error saving usage info: " + error.message);
+      }
+    });
+
+  </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>All Users Info - Admin Panel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    button {
+      padding: 6px 12px;
+      margin: 2px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+    }
+    button.edit-btn {
+      background-color: #28a745;
+    }
+    button.delete-btn {
+      background-color: #dc3545;
+    }
+    #editForm {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px #ccc;
+    }
+    #editForm label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #editForm input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+    #editForm button {
+      margin-top: 15px;
+      width: 100%;
+      background: #007bff;
+    }
+    #editForm button.cancel-btn {
+      background: #6c757d;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>All Users Info</h1>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Line No</th>
+        <th>Card ID</th>
+        <th>Usage (Litre)</th>
+        <th>Bill (tk)</th>
+        <th>Time</th>
+        <th>Balance</th>
+        <th>Remaining Usage</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- ডাইনামিক ডাটা এখানে আসবে -->
+    </tbody>
+  </table>
+
+  <!-- Edit Form -->
+  <div id="editForm" style="display:none;">
+    <h2>Edit User Usage Info</h2>
+    <form id="usageEditForm">
+      <input type="hidden" id="editUserId" />
+      
+      <label>Name</label>
+      <input type="text" id="editName" required />
+      
+      <label>Line No</label>
+      <input type="number" id="editLineNo" required />
+      
+      <label>Card ID</label>
+      <input type="text" id="editCardId" readonly />
+      
+      <label>Usage (Litre)</label>
+      <input type="number" step="0.01" id="editUsageLitres" required />
+      
+      <label>Bill (tk)</label>
+      <input type="number" step="0.01" id="editBill" required />
+      
+      <label>Time</label>
+      <input type="time" id="editTime" required />
+      
+      <label>Balance</label>
+      <input type="number" step="0.01" id="editBalance" required />
+      
+      <label>Remaining Usage</label>
+      <input type="number" step="0.01" id="editRemainingUsage" required />
+      
+      <label>Status</label>
+      <input type="text" id="editStatus" required />
+      
+      <button type="submit">Update</button>
+      <button type="button" class="cancel-btn" id="cancelEditBtn">Cancel</button>
+    </form>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+    authDomain: "iotproject-1a161.firebaseapp.com",
+    projectId: "iotproject-1a161",
+    storageBucket: "iotproject-1a161.appspot.com",
+    messagingSenderId: "231906985874",
+    appId: "1:231906985874:web:0450fc017515f82c99a34b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const usersTableBody = document.querySelector("#usersTable tbody");
+  const editFormDiv = document.getElementById("editForm");
+  const usageEditForm = document.getElementById("usageEditForm");
+
+  const lineNoToCardId = {
+    1: "99035899",
+    2: "98096921"
+  };
+
+  async function loadAllUsers() {
+    usersTableBody.innerHTML = "";
+    const usersCol = collection(db, "users");
+    const usersSnapshot = await getDocs(usersCol);
+
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+
+      // শুধু role 0 ইউজার দেখানো
+      if (userData.role !== 0 && userData.role !== "0") {
+        continue;
+      }
+
+      const usageDocRef = doc(db, "users", userId, "waterUsage", "latest");
+      const usageDocSnap = await getDoc(usageDocRef);
+
+      const usageData = usageDocSnap.exists() ? usageDocSnap.data() : {
+        lineNo: "", cardId: "", usageLitres: "", bill: "", time: "", balance: "", remainingUsage: "", status: ""
+      };
+
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${userId}</td>
+        <td>${usageData.name || userData.name || ""}</td>
+        <td>${userData.email || ""}</td>
+        <td>${usageData.lineNo}</td>
+        <td>${usageData.cardId}</td>
+        <td>${usageData.usageLitres}</td>
+        <td>${usageData.bill}</td>
+        <td>${usageData.time}</td>
+        <td>${usageData.balance}</td>
+        <td>${usageData.remainingUsage}</td>
+        <td>${usageData.status}</td>
+        <td>
+          <button class="edit-btn" data-userid="${userId}">Edit</button>
+          <button class="delete-btn" data-userid="${userId}">Delete</button>
+        </td>
+      `;
+
+      usersTableBody.appendChild(tr);
+    }
+
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const userId = e.target.dataset.userid;
+        openEditForm(userId);
+      });
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const userId = e.target.dataset.userid;
+        if (confirm("Are you sure you want to delete this user's usage info?")) {
+          try {
+            await deleteDoc(doc(db, "users", userId, "waterUsage", "latest"));
+            alert("User usage info deleted");
+            loadAllUsers();
+          } catch (err) {
+            alert("Error deleting: " + err.message);
+          }
+        }
+      });
+    });
+  }
+
+  async function openEditForm(userId) {
+    const userDocRef = doc(db, "users", userId);
+    const userDocSnap = await getDoc(userDocRef);
+    if (!userDocSnap.exists()) {
+      alert("User not found!");
+      return;
+    }
+    const userData = userDocSnap.data();
+
+    const usageDocRef = doc(db, "users", userId, "waterUsage", "latest");
+    const usageDocSnap = await getDoc(usageDocRef);
+
+    const usageData = usageDocSnap.exists() ? usageDocSnap.data() : {
+      lineNo: "", cardId: "", usageLitres: "", bill: "", time: "", balance: "", remainingUsage: "", status: ""
+    };
+
+    document.getElementById("editUserId").value = userId;
+    document.getElementById("editName").value = usageData.name || userData.name || "";
+    document.getElementById("editLineNo").value = usageData.lineNo || "";
+    document.getElementById("editCardId").value = usageData.cardId || "";
+    document.getElementById("editUsageLitres").value = usageData.usageLitres || "";
+    document.getElementById("editBill").value = usageData.bill || "";
+    document.getElementById("editTime").value = usageData.time || "";
+    document.getElementById("editBalance").value = usageData.balance || "";
+    document.getElementById("editRemainingUsage").value = usageData.remainingUsage || "";
+    document.getElementById("editStatus").value = usageData.status || "";
+
+    editFormDiv.style.display = "block";
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  document.getElementById("editLineNo").addEventListener("input", (e) => {
+    const lineNo = e.target.value;
+    document.getElementById("editCardId").value = lineNoToCardId[lineNo] || "";
+  });
+
+  usageEditForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const userId = document.getElementById("editUserId").value;
+    if (!userId) {
+      alert("User ID missing!");
+      return;
+    }
+
+    const updatedData = {
+      name: document.getElementById("editName").value,
+      lineNo: Number(document.getElementById("editLineNo").value),
+      cardId: document.getElementById("editCardId").value,
+      usageLitres: Number(document.getElementById("editUsageLitres").value),
+      bill: Number(document.getElementById("editBill").value),
+      time: document.getElementById("editTime").value,
+      balance: Number(document.getElementById("editBalance").value),
+      remainingUsage: Number(document.getElementById("editRemainingUsage").value),
+      status: document.getElementById("editStatus").value,
+    };
+
+    try {
+      await setDoc(doc(db, "users", userId, "waterUsage", "latest"), updatedData);
+      alert("User usage info updated!");
+      editFormDiv.style.display = "none";
+      loadAllUsers();
+    } catch (err) {
+      alert("Update failed: " + err.message);
+    }
+  });
+
+  document.getElementById("cancelEditBtn").addEventListener("click", () => {
+    editFormDiv.style.display = "none";
+  });
+
+  loadAllUsers();
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Details</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    .info {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+      margin-top: 20px;
+    }
+    .info p {
+      font-size: 1.1em;
+      margin: 10px 0;
+    }
+    #loading {
+      text-align: center;
+      font-size: 1.2em;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Your User Details</h1>
+  <div id="loading">Loading user data...</div>
+
+  <div class="info" id="userInfo" style="display:none;">
+    <p><strong>User ID:</strong> <span id="userId"></span></p>
+    <p><strong>Name:</strong> <span id="name"></span></p>
+    <p><strong>Email:</strong> <span id="email"></span></p>
+    <p><strong>Line No:</strong> <span id="lineNo"></span></p>
+    <p><strong>Card ID:</strong> <span id="cardId"></span></p>
+    <p><strong>Usage (Litre):</strong> <span id="usageLitres"></span></p>
+    <p><strong>Bill (tk):</strong> <span id="bill"></span></p>
+    <p><strong>Time:</strong> <span id="time"></span></p>
+    <p><strong>Balance:</strong> <span id="balance"></span></p>
+    <p><strong>Remaining Usage:</strong> <span id="remainingUsage"></span></p>
+    <p><strong>Status:</strong> <span id="status"></span></p>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyB9FFmqxNbTcKe6lzYbQVOTuaMBeYhtaIY",
+    authDomain: "iotproject-1a161.firebaseapp.com",
+    projectId: "iotproject-1a161",
+    storageBucket: "iotproject-1a161.appspot.com",
+    messagingSenderId: "231906985874",
+    appId: "1:231906985874:web:0450fc017515f82c99a34b"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const loadingDiv = document.getElementById("loading");
+  const userInfoDiv = document.getElementById("userInfo");
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // User is signed in
+      const userId = user.uid;
+      document.getElementById("userId").textContent = userId;
+      document.getElementById("email").textContent = user.email;
+
+      // Get user main document
+      const userDocRef = doc(db, "users", userId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        loadingDiv.textContent = "User data not found.";
+        return;
+      }
+      const userData = userDocSnap.data();
+
+      // Get water usage subcollection latest document
+      const usageDocRef = doc(db, "users", userId, "waterUsage", "latest");
+      const usageDocSnap = await getDoc(usageDocRef);
+      const usageData = usageDocSnap.exists() ? usageDocSnap.data() : {};
+
+      document.getElementById("name").textContent = userData.name || "";
+      document.getElementById("lineNo").textContent = usageData.lineNo ?? "";
+      document.getElementById("cardId").textContent = usageData.cardId || "";
+      document.getElementById("usageLitres").textContent = usageData.usageLitres ?? "";
+      document.getElementById("bill").textContent = usageData.bill ?? "";
+      document.getElementById("time").textContent = usageData.time || "";
+      document.getElementById("balance").textContent = usageData.balance ?? "";
+      document.getElementById("remainingUsage").textContent = usageData.remainingUsage ?? "";
+      document.getElementById("status").textContent = usageData.status || "";
+
+      loadingDiv.style.display = "none";
+      userInfoDiv.style.display = "block";
+
+    } else {
+      // User is signed out, redirect to login page or show message
+      loadingDiv.textContent = "You are not logged in. Please login first.";
+      userInfoDiv.style.display = "none";
+      // Optionally redirect:
+      // window.location.href = 'login.html';
+    }
+  });
+</script>
+
+</body>
+</html>
