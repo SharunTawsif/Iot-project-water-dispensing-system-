@@ -74,7 +74,7 @@ GitHub Project Link: [IoT Project — Water Dispensing System](https://github.co
 
 ## 📈 Flowchart  
 
-![Flowchart](Flowchart.jpeg)  
+![Flowchart](Flowchart.jpg)  
 
 ---
 
