@@ -68,7 +68,7 @@ GitHub Project Link: [IoT Project — Water Dispensing System](https://github.co
 
 ## 📐 System Architecture  
 
-![System Design](System%20Design%20&%20Architecture.jpeg)  
+![System Design](System%20Design%20&%20Architecture.jpg)  
 
 ---
 
